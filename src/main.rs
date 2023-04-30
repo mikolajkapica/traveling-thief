@@ -11,11 +11,11 @@ fn main() {
     let rng = &mut thread_rng();
 
     // import data
-    let items = get_input_data("src/a280_n1395_uncorr-similar-weights_05.ttp.txt");
+    let nodes = get_input_data("src/a280_n1395_uncorr-similar-weights_05.ttp.txt");
 
     // create initial population
     let mut population: Vec<Chromosome> = (0..population_size)
-        .map(|_| Chromosome::new(&items))
+        .map(|_| Chromosome::new(&nodes))
         .collect();
 
     // evolve
@@ -38,19 +38,15 @@ fn main() {
             tournament.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
             let parent1 = tournament[0].clone();
             let parent2 = tournament[1].clone();
-            let mut child = parent1.crossover(&parent2);
-            child.mutate(mutation_rate);
+            let mut child = parent1.crossover(&parent2, &nodes);
+            child.mutate(mutation_rate, &nodes);
             new_population.push(child);
         }
         population = new_population;
         print!("\rGeneration: {} ", generation);
     }
     population.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
-    println!("Path: \n{}", population[0].items.iter()
-        .map(|item| (item.x, item.y))
-        .map(|(x, y)| format!("({}, {})", x, y))
-        .collect::<Vec<String>>()
-        .join(" -> \n"));
+    println!("Path: \n{}", population[0].path.iter().map(|node| format!("{},{}", node.coordinates.0, node.coordinates.1)).collect::<Vec<String>>().join("\n"));
 
     println!("Fitness: {}", population[0].fitness);
 }
