@@ -2,6 +2,21 @@ use std::fs;
 use rand::{Rng};
 use rand::prelude::ThreadRng;
 
+pub struct Settings {
+    pub number_of_generations: i32,
+    pub population_size: usize,
+    pub item_chance: f64,
+    pub mutation_rate: f32,
+    pub tournament_size: i32,
+    pub elitism: bool,
+    pub elitism_size: usize,
+    pub renting_rate: f32,
+    pub v_max: f32,
+    pub v_min: f32,
+    pub maximum_weight: i32,
+    pub data_path: &'static str,
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Node {
     pub coordinates: (i32, i32),
