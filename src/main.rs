@@ -1,5 +1,7 @@
+use std::{env, io};
+use std::io::Write;
 use rand::{Rng, thread_rng};
-use ttp::{Chromosome, get_input_data};
+use ttp::{Chromosome, get_nodes_from_data, Settings};
 
 fn main() {
     let population_size = 100;
