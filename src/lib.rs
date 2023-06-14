@@ -152,34 +152,6 @@ impl Chromosome {
         }
     }
 
-    pub fn repair(path: &mut Vec<Node>, nodes: &Vec<Node>) {
-        let mut unvisited_nodes = Vec::new();
-        for node in nodes {
-            let mut found = false;
-            for solution_node in path.clone() {
-                if node.coordinates == solution_node.coordinates {
-                    found = true;
-                    break;
-                }
-            }
-            if !found {
-                unvisited_nodes.push(node.clone());
-            }
-        }
-        // Add missing cities using Nearest Neighbor algorithm
-        for i in 0..unvisited_nodes.len() {
-            let mut min_dist = f32::MAX;
-            let mut min_index = 0;
-            for j in 0..path.len() {
-                let dist = dist(&unvisited_nodes[i], &path[j]);
-                if dist < min_dist {
-                    min_dist = dist;
-                    min_index = j;
-                }
-            }
-            path.insert(min_index, unvisited_nodes[i].clone());
-        }
-    }
 
     pub fn mutate(&mut self, mutation_rate: f32, nodes: &Vec<Node>) {
         let rng = &mut thread_rng();
@@ -191,6 +163,42 @@ impl Chromosome {
         }
         Chromosome::repair(&mut self.path, nodes);
         self.fitness = Chromosome::calculate_fitness(&self.path);
+    /// repair path by adding missing cities using Nearest Neighbor algorithm
+    fn repair(path: &mut Vec<Node>, nodes: &Vec<Node>) {
+        // if we have duplicate nodes in path, remove them
+        path.sort_by_key(|a| a.id);
+        path.dedup_by_key(|a| a.id);
+
+        // if path is complete, return
+        if path.len() == nodes.len() { return; }
+
+        // add missing nodes to path using Nearest Neighbor algorithm
+        for node_idx in 0..nodes.len() {
+            let node = &nodes[node_idx];
+
+            // if node coordinates are already in path, skip it
+            if path.iter().any(|n| n.id == node.id) { continue; }
+
+            // else add it
+            // find path node that is closest to current node
+            let mut min_index = path.iter()
+                .enumerate()
+                .min_by_key(|(_, n)| dist(&node, n))
+                .unwrap().0;
+
+            // insert node in path
+            // if node is closer to previous node than to next node, insert it before previous node
+            if min_index == 0 {
+                path.insert(0, node.clone());
+            } else if min_index == path.len() - 1 {
+                path.push(node.clone());
+            } else {
+                let dist_before = dist(&node, &path[min_index - 1]);
+                let dist_after = dist(&node, &path[min_index + 1]);
+                if dist_before < dist_after { min_index -= 1; }
+                path.insert(min_index, node.clone());
+            }
+        }
     }
 }
 
