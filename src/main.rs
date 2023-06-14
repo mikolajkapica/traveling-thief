@@ -20,6 +20,9 @@ fn main() {
         data_path: "src/a280_n1395_uncorr-similar-weights_05.ttp.txt",
     };
 
+    // destructuring
+    let Settings { number_of_generations, population_size, tournament_size, elitism, elitism_size, data_path, .. } = settings;
+
     // import data
     let nodes = get_input_data("src/a280_n1395_uncorr-similar-weights_05.ttp.txt");
 
