@@ -257,8 +257,8 @@ pub fn dist(node1: &Node, node2: &Node) -> i32 {
     dx + dy
 }
 
-pub fn random_subpath(n: usize) -> (usize, usize) {
-    let mut rng = thread_rng();
+/// takes n and returns 2 random numbers between 0 and n inclusive
+pub fn random_subpart(n: usize, rng: &mut ThreadRng) -> (usize, usize) {
     let start = rng.gen_range(0..n);
     let end = rng.gen_range(0..n);
     if start < end {
