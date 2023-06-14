@@ -117,38 +117,35 @@ impl Chromosome {
         fitness
     }
 
-    pub fn crossover(self, other: &Chromosome, nodes: &Vec<Node>) -> Chromosome {
-        let n = self.path.len();
-        let (start, end) = random_subpath(n);
-        let mut child_path = Vec::new();
-        for _ in 0..n {
+    /// make child from 2 parents by combining parts of both parents
+    pub fn crossover(self, other: &Chromosome, nodes: &Vec<Node>, rng: &mut ThreadRng, settings: &Settings) -> Chromosome {
+        let path_length = self.path.len();
+        let (start, end) = random_subpart(path_length, rng);
+
+        // create child path
+        let mut child_path = Vec::with_capacity(path_length);
+        for _ in 0..path_length {
             child_path.push(Node {
+                id: 0,
                 coordinates: (0, 0),
                 items: Vec::new(),
             });
         }
 
-        // Copy subpath from parent1 to child
-        for i in start..=end {
-            child_path[i] = self.path[i].clone();
-        }
+        // fill in nodes from parent1
+        for i in start..=end { child_path[i] = self.path[i].clone(); }
 
-        // Fill in remaining nodes from parent2
-        let mut index = end + 1;
-        for i in 0..other.path.len() {
-            if !child_path.contains(&other.path[i]) {
-                if index == n {
-                    index = 0;
-                }
-                child_path[index] = other.path[i].clone();
-                index += 1;
-            }
-        }
+        // fill in nodes from parent2
+        for i in 0..start { child_path[i] = other.path[i].clone(); }
+        for i in end+1..path_length { child_path[i] = other.path[i].clone(); }
 
-        Chromosome::repair(&mut child_path, nodes);
+        // repair child path
+        Chromosome::repair(&mut child_path, &nodes);
 
-        let fitness = Chromosome::calculate_fitness(&child_path);
+        // calculate fitness
+        let fitness = Chromosome::calculate_fitness( &child_path, settings);
 
+        // return child
         Chromosome {
             path: child_path,
             fitness,
