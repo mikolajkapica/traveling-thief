@@ -68,15 +68,17 @@ impl Chromosome {
         }
     }
 
-    fn calculate_fitness(path: &Vec<Node>) -> f32 {
-        let renting_rate = 0.1;
-        let v_max = 10.0;
-        let v_min = 1.0;
-        // maximum weight
-        let w = 1;
-        let nu = (v_max-v_min) / w as f32;
+    /// calculate fitness of path
+    fn calculate_fitness(path: &Vec<Node>, settings: &Settings) -> f32 {
+        /*
+        fitness = sum of profits of all items - (sum of distances between nodes / (v_max - (nu * current_weight)))
+        */
+        let Settings { renting_rate, v_max, v_min, maximum_weight, .. } = settings;
+        let nu = (v_max-v_min) / *maximum_weight as f32;
 
+        // initialize fitness
         let mut fitness = 0.0;
+
         // add profit of all items
         for node in path {
             for item in &node.items {
@@ -84,23 +86,34 @@ impl Chromosome {
             }
         }
 
-        // subtract renting rate of all items
-        let mut weight = 0;
+        // while going through path,
+        // thief travels distance, more distance = less fitness
+        // thief carries more weight, more weight = less fitness
+        let mut current_weight = 0;
         let mut current_node = &path[0];
         let mut subtrahend = 0.0;
-        for node in &path[1..] {
-            let current_weight = weight;
+        for node in path {
+            // add weight of items in current node to current weight
             for item in &node.items {
-                weight += item.weight;
+                current_weight += item.weight;
             }
-            if weight > w {
-               return 0.0;
+
+            // if current weight is greater than what thief can hold at once, return 0
+            if current_weight > *maximum_weight {
+               return 0 as f32;
             }
-            subtrahend += dist(current_node, node) / (v_max - (nu * current_weight as f32));
+
+            // calculate subtrahend
+            subtrahend += dist(node, current_node) as f32 / (v_max - (nu * current_weight as f32));
             current_node = node;
         }
+
+        // multiply subtrahend by renting rate
         subtrahend *= renting_rate;
+
+        // subtract subtrahend from fitness
         fitness -= subtrahend;
+
         fitness
     }
 
