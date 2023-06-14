@@ -152,17 +152,22 @@ impl Chromosome {
         }
     }
 
+    /// swap 2 random nodes in path
+    pub fn mutate(&mut self, rng: &mut ThreadRng, settings: &Settings) {
+        let Settings { mutation_rate, .. } = settings;
 
-    pub fn mutate(&mut self, mutation_rate: f32, nodes: &Vec<Node>) {
-        let rng = &mut thread_rng();
+        // swap 2 random nodes in path
         for i in 0..self.path.len() {
-            if rng.gen_bool(mutation_rate as f64) {
+            if rng.gen_bool(*mutation_rate as f64) {
                 let index = rng.gen_range(0..self.path.len());
                 self.path.swap(i, index);
             }
         }
-        Chromosome::repair(&mut self.path, nodes);
-        self.fitness = Chromosome::calculate_fitness(&self.path);
+
+        // recalculate fitness
+        self.fitness = Chromosome::calculate_fitness(&self.path, settings);
+    }
+
     /// repair path by adding missing cities using Nearest Neighbor algorithm
     fn repair(path: &mut Vec<Node>, nodes: &Vec<Node>) {
         // if we have duplicate nodes in path, remove them
