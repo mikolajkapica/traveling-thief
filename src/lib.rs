@@ -24,7 +24,7 @@ pub struct Node {
     items: Vec<Item>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Item {
     profit: i32,
     weight: i32,
