@@ -207,7 +207,8 @@ impl Chromosome {
     }
 }
 
-pub fn get_input_data(file_path: &str) -> Vec<Node> {
+/// read input data from file
+pub fn get_nodes_from_data(file_path: &str) -> Vec<Node> {
     let contents = fs::read_to_string(file_path)
         .expect("Something went wrong reading the file");
     let mut lines = contents.lines();
@@ -225,8 +226,8 @@ pub fn get_input_data(file_path: &str) -> Vec<Node> {
         .take_while(|line| !line.starts_with("ITEMS SECTION"))
         .map(|line| {
             let mut line = line.split_whitespace();
-            line.next();
             Node {
+                id: line.next().unwrap().parse().unwrap(),
                 coordinates:
                     (line.next().unwrap().parse().unwrap(),
                      line.next().unwrap().parse().unwrap()),
@@ -244,7 +245,7 @@ pub fn get_input_data(file_path: &str) -> Vec<Node> {
             let profit = line.next().unwrap().parse().unwrap();
             let weight = line.next().unwrap().parse().unwrap();
             let node = node_coordinates.get_mut(line.next().unwrap().parse::<usize>().unwrap() - 1).unwrap();
-            node.items.push(Item { profit, weight});
+            node.items.push(Item { profit, weight });
         });
     node_coordinates
 }
