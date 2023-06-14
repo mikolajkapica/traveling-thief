@@ -19,6 +19,7 @@ pub struct Settings {
 
 #[derive(Clone, PartialEq)]
 pub struct Node {
+    id: i32,
     pub coordinates: (i32, i32),
     items: Vec<Item>,
 }
