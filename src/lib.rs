@@ -1,5 +1,6 @@
 use std::fs;
-use rand::{Rng, thread_rng};
+use rand::{Rng};
+use rand::prelude::ThreadRng;
 
 #[derive(Clone, PartialEq)]
 pub struct Node {
