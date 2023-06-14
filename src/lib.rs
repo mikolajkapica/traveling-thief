@@ -37,29 +37,34 @@ pub struct Chromosome {
 }
 
 impl Chromosome {
-    pub fn new(nodes: &Vec<Node>) -> Chromosome {
-        let rng = &mut thread_rng();
+    /// create new chromosome with random path
+    pub fn new(nodes: &Vec<Node>, rng: &mut ThreadRng, settings: &Settings) -> Chromosome {
+        let mut nodes = nodes.clone();
+        let Settings { item_chance, .. } = settings;
 
-        let mut path = Vec::new();
-        let mut unused_nodes = nodes.clone();
-        for i in 0..nodes.len() {
-            let index = rng.gen_range(0..unused_nodes.len());
-            path.push(unused_nodes[index].clone());
-            path[i].items = Vec::new();
-            for item in unused_nodes[index].items.clone() {
-                if rng.gen_bool(0.2) {
-                    path[i].items.push(item.clone());
+        // get path with random nodes with random number of items
+        let path: Vec<Node> = (0..nodes.len())
+            .map(|_| {
+                let node = nodes.swap_remove(rng.gen_range(0..nodes.len()));
+                let items = node.items
+                    .into_iter()
+                    .filter(|_| rng.gen_bool(*item_chance))
+                    .collect();
+                Node {
+                    id: node.id,
+                    coordinates: node.coordinates,
+                    items,
                 }
-            }
-            unused_nodes.remove(index);
-        }
+            })
+            .collect();
 
-        let fitness = Chromosome::calculate_fitness(&path);
+        // get path fitness
+        let fitness = Chromosome::calculate_fitness(&path, settings);
 
         // create chromosome
         Chromosome {
             path,
-            fitness
+            fitness,
         }
     }
 
