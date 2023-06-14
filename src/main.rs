@@ -27,42 +27,51 @@ fn main() {
     let mut rng = &mut thread_rng();
 
     // import data
-    let nodes = get_input_data("src/a280_n1395_uncorr-similar-weights_05.ttp.txt");
+    let nodes = get_nodes_from_data(data_path);
 
     // create initial population
     let mut population: Vec<Chromosome> = (0..population_size)
-        .map(|_| Chromosome::new(&nodes))
+        .map(|_| Chromosome::new(&nodes, rng, &settings))
         .collect();
 
     // evolve
-    let mut generation = 0;
-    while generation < max_generations {
-        generation += 1;
-        let mut new_population = Vec::new();
-        population.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
-        if elitism {
+    for generation in 0..number_of_generations {
+        print!("\rGeneration: {}/{} ", generation+1, number_of_generations);
+        io::stdout().flush().unwrap();
 
-            for i in 0..elitism_size {
-                new_population.push(population[i].clone());
-            }
+        // create new population
+        let mut new_population = Vec::new();
+
+        // elitism
+        if elitism {
+            population.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
+            new_population = population[0..elitism_size].to_vec();
         }
+
+        // fill new population with children
         while new_population.len() != population_size {
+            // get 2 winning parents from tournament
             let mut tournament = Vec::new();
-            for _ in 0..tournament_size {
-                tournament.push(population[rng.gen_range( 0..population_size)].clone());
-            }
+            for _ in 0..tournament_size { tournament.push(&population[rng.gen_range( 0..population_size)]); }
             tournament.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
             let parent1 = tournament[0].clone();
             let parent2 = tournament[1].clone();
-            let mut child = parent1.crossover(&parent2, &nodes);
-            child.mutate(mutation_rate, &nodes);
+
+            // crossover and mutate parents to create child
+            let mut child = parent1.crossover(&parent2, &nodes, rng, &settings);
+            child.mutate(&mut rng, &settings);
             new_population.push(child);
         }
-        population = new_population;
-        print!("\rGeneration: {} ", generation);
-    }
-    population.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
-    println!("Path: \n{}", population[0].path.iter().map(|node| format!("{},{}", node.coordinates.0, node.coordinates.1)).collect::<Vec<String>>().join("\n"));
 
-    println!("Fitness: {}", population[0].fitness);
+        // replace old population with new population
+        population = new_population;
+    }
+
+    // get best gene
+    population.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
+    let best_gene = population[0].clone();
+
+    // print best gene
+    // println!("\nPath: {}", best_gene.path.iter().map(|node| format!("({},{})", node.coordinates.0, node.coordinates.1)).collect::<Vec<String>>().join(" -> "));
+    println!("Fitness: {}", best_gene.fitness);
 }
