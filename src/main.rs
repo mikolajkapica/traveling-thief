@@ -23,6 +23,9 @@ fn main() {
     // destructuring
     let Settings { number_of_generations, population_size, tournament_size, elitism, elitism_size, data_path, .. } = settings;
 
+    // random number generator
+    let mut rng = &mut thread_rng();
+
     // import data
     let nodes = get_input_data("src/a280_n1395_uncorr-similar-weights_05.ttp.txt");
 
