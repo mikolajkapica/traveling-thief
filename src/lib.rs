@@ -250,10 +250,11 @@ pub fn get_nodes_from_data(file_path: &str) -> Vec<Node> {
     node_coordinates
 }
 
-pub fn dist(node1: &Node, node2: &Node) -> f32 {
-    let x = (node1.coordinates.0 - node2.coordinates.0).pow(2);
-    let y = (node1.coordinates.1 - node2.coordinates.1).pow(2);
-    (x as f32 + y as f32).sqrt()
+/// calculate manhattan distance between 2 nodes
+pub fn dist(node1: &Node, node2: &Node) -> i32 {
+    let dx = (node1.coordinates.0 - node2.coordinates.0).abs();
+    let dy = (node1.coordinates.1 - node2.coordinates.1).abs();
+    dx + dy
 }
 
 pub fn random_subpath(n: usize) -> (usize, usize) {
