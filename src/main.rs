@@ -4,13 +4,21 @@ use rand::{Rng, thread_rng};
 use ttp::{Chromosome, get_nodes_from_data, Settings};
 
 fn main() {
-    let population_size = 100;
-    let mutation_rate = 0.01;
-    let tournament_size = 5;
-    let elitism = false;
-    let elitism_size = 5;
-    let max_generations = 1000;
-    let rng = &mut thread_rng();
+    // initialize parameters
+    let settings = Settings {
+        number_of_generations: env::args().nth(1).unwrap_or("1000".to_string()).parse::<i32>().unwrap(),
+        population_size: 250,
+        item_chance: 0.2,
+        mutation_rate: 0.1,
+        tournament_size: 5,
+        elitism: true,
+        elitism_size: 5,
+        renting_rate: 0.2,
+        v_max: 10.0,
+        v_min: 0.1,
+        maximum_weight: 10,
+        data_path: "src/a280_n1395_uncorr-similar-weights_05.ttp.txt",
+    };
 
     // import data
     let nodes = get_input_data("src/a280_n1395_uncorr-similar-weights_05.ttp.txt");
