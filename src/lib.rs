@@ -19,13 +19,14 @@ pub struct Settings {
 
 #[derive(Clone, PartialEq)]
 pub struct Node {
-    id: i32,
+    pub id: i32,
     pub coordinates: (i32, i32),
-    items: Vec<Item>,
+    pub items: Vec<Item>,
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Item {
+    id : i32,
     profit: i32,
     weight: i32,
 }
@@ -211,7 +212,7 @@ impl Chromosome {
 pub fn get_nodes_from_data(file_path: &str) -> Vec<Node> {
     let contents = fs::read_to_string(file_path)
         .expect("Something went wrong reading the file");
-    let mut lines = contents.lines();
+    let lines = contents.lines();
 
     // skip information
     loop {
@@ -240,12 +241,14 @@ pub fn get_nodes_from_data(file_path: &str) -> Vec<Node> {
         .skip_while(|line| !line.starts_with("ITEMS SECTION"))
         .skip(1) // skip ITEMS SECTION line
         .map(|line| {
+            println!("{}", line);
             let mut line = line.split_whitespace();
-            line.next();
+            let id = line.next().unwrap().parse().unwrap();
             let profit = line.next().unwrap().parse().unwrap();
             let weight = line.next().unwrap().parse().unwrap();
             let node = node_coordinates.get_mut(line.next().unwrap().parse::<usize>().unwrap() - 1).unwrap();
-            node.items.push(Item { profit, weight });
+            println!("node id: {}, item id: {}", node.id, id);
+            node.items.push(Item {id, profit, weight });
         });
     node_coordinates
 }
