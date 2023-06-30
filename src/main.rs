@@ -29,6 +29,10 @@ fn main() {
     // import data
     let nodes = get_nodes_from_data(data_path);
 
+    // print nodes
+    // nodes.iter().for_each(|node| println!("id: {}, items.length(): {}", node.id, node.items.len()));
+    
+
     // create initial population
     let mut population: Vec<Chromosome> = (0..population_size)
         .map(|_| Chromosome::new(&nodes, rng, &settings))
