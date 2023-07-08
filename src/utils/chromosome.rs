@@ -1,35 +1,6 @@
-use std::fs;
-use rand::{Rng};
-use rand::prelude::ThreadRng;
-
-pub struct Settings {
-    pub number_of_generations: i32,
-    pub population_size: usize,
-    pub item_chance: f64,
-    pub mutation_rate: f32,
-    pub tournament_size: i32,
-    pub elitism: bool,
-    pub elitism_size: usize,
-    pub renting_rate: f32,
-    pub v_max: f32,
-    pub v_min: f32,
-    pub maximum_weight: i32,
-    pub data_path: &'static str,
-}
-
-#[derive(Clone, PartialEq)]
-pub struct Node {
-    pub id: i32,
-    pub coordinates: (i32, i32),
-    pub items: Vec<Item>,
-}
-
-#[derive(Clone, PartialEq)]
-pub struct Item {
-    id : i32,
-    profit: i32,
-    weight: i32,
-}
+use super::structs::{Node, Settings};
+use rand::Rng;
+use rand::rngs::ThreadRng;
 
 #[derive(Clone)]
 pub struct Chromosome {
@@ -69,11 +40,8 @@ impl Chromosome {
         }
     }
 
-    /// calculate fitness of path
+    /// calculate fitness of path - fitness = sum of profits of all items - (sum of distances between nodes / (v_max - (nu * current_weight)))
     fn calculate_fitness(path: &Vec<Node>, settings: &Settings) -> f32 {
-        /*
-        fitness = sum of profits of all items - (sum of distances between nodes / (v_max - (nu * current_weight)))
-        */
         let Settings { renting_rate, v_max, v_min, maximum_weight, .. } = settings;
         let nu = (v_max-v_min) / *maximum_weight as f32;
 
@@ -101,11 +69,11 @@ impl Chromosome {
 
             // if current weight is greater than what thief can hold at once, return 0
             if current_weight > *maximum_weight {
-               return 0 as f32;
+                return 0 as f32;
             }
 
             // calculate subtrahend
-            subtrahend += dist(node, current_node) as f32 / (v_max - (nu * current_weight as f32));
+            subtrahend += node.distance_to(current_node) as f32 / (v_max - (nu * current_weight as f32));
             current_node = node;
         }
 
@@ -123,6 +91,7 @@ impl Chromosome {
         let path_length = self.path.len();
         let (start, end) = random_subpart(path_length, rng);
 
+
         // create child path
         let mut child_path = Vec::with_capacity(path_length);
         for _ in 0..path_length {
@@ -134,7 +103,7 @@ impl Chromosome {
         }
 
         // fill in nodes from parent1
-        for i in start..=end { child_path[i] = self.path[i].clone(); }
+        child_path[start..=end].clone_from_slice(&self.path[start..=end]);
 
         // fill in nodes from parent2
         for i in 0..start { child_path[i] = other.path[i].clone(); }
@@ -189,7 +158,7 @@ impl Chromosome {
             // find path node that is closest to current node
             let mut min_index = path.iter()
                 .enumerate()
-                .min_by_key(|(_, n)| dist(&node, n))
+                .min_by_key(|(_, n)| node.distance_to(n))
                 .unwrap().0;
 
             // insert node in path
@@ -199,8 +168,8 @@ impl Chromosome {
             } else if min_index == path.len() - 1 {
                 path.push(node.clone());
             } else {
-                let dist_before = dist(&node, &path[min_index - 1]);
-                let dist_after = dist(&node, &path[min_index + 1]);
+                let dist_before = node.distance_to(&path[min_index - 1]);
+                let dist_after = node.distance_to(&path[min_index + 1]);
                 if dist_before < dist_after { min_index -= 1; }
                 path.insert(min_index, node.clone());
             }
@@ -208,62 +177,9 @@ impl Chromosome {
     }
 }
 
-/// read input data from file
-pub fn get_nodes_from_data(file_path: &str) -> Vec<Node> {
-    let contents = fs::read_to_string(file_path)
-        .expect("Something went wrong reading the file");
-    let lines = contents.lines();
-
-    // skip information
-    loop {
-        if lines.next().unwrap().contains("NODE_COORD_SECTION") {
-            break;
-        }
-    }
-
-    // get node coordinates
-    let mut node_coordinates: Vec<Node> = lines
-        .clone()
-        .take_while(|line| !line.starts_with("ITEMS SECTION"))
-        .map(|line| {
-            let mut line = line.split_whitespace();
-            Node {
-                id: line.next().unwrap().parse().unwrap(),
-                coordinates:
-                    (line.next().unwrap().parse().unwrap(),
-                     line.next().unwrap().parse().unwrap()),
-                items: Vec::new(),
-            }
-        }).collect();
-
-    // get items
-    let _ = lines
-        .skip_while(|line| !line.starts_with("ITEMS SECTION"))
-        .skip(1) // skip ITEMS SECTION line
-        .map(|line| {
-            println!("{}", line);
-            let mut line = line.split_whitespace();
-            let id = line.next().unwrap().parse().unwrap();
-            let profit = line.next().unwrap().parse().unwrap();
-            let weight = line.next().unwrap().parse().unwrap();
-            let node = node_coordinates.get_mut(line.next().unwrap().parse::<usize>().unwrap() - 1).unwrap();
-            println!("node id: {}, item id: {}", node.id, id);
-            node.items.push(Item {id, profit, weight });
-        });
-    node_coordinates
-}
-
-/// calculate manhattan distance between 2 nodes
-pub fn dist(node1: &Node, node2: &Node) -> i32 {
-    let dx = (node1.coordinates.0 - node2.coordinates.0).abs();
-    let dy = (node1.coordinates.1 - node2.coordinates.1).abs();
-    dx + dy
-}
-
-/// takes n and returns 2 random numbers between 0 and n inclusive
-pub fn random_subpart(n: usize, rng: &mut ThreadRng) -> (usize, usize) {
-    let start = rng.gen_range(0..n);
-    let end = rng.gen_range(0..n);
+fn random_subpart(path_length: usize, rng: &mut ThreadRng) -> (usize, usize) {
+    let start = rng.gen_range(0..path_length);
+    let end = rng.gen_range(0..path_length);
     if start < end {
         (start, end)
     } else {
