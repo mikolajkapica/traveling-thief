@@ -1,8 +1,13 @@
-#[derive(Clone)]
+#[derive(Clone, Default, Debug)]
 pub struct Node {
     pub id: i32,
     pub coordinates: (i32, i32),
     pub items: Vec<Item>,
+}
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
 
 impl Node {
@@ -14,11 +19,16 @@ impl Node {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Item {
     pub id : i32,
     pub profit: i32,
     pub weight: i32,
+}
+impl PartialEq for Item {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
 
 pub struct Settings {
