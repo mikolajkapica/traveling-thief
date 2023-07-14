@@ -22,7 +22,7 @@ fn main() {
         v_max: 10.0,
         v_min: 0.1,
         maximum_weight: 280_000,
-        data_path: "../src/a280_n1395_uncorr-similar-weights_05.ttp.txt",
+        data_path: "src/a280_n1395_uncorr-similar-weights_05.ttp.txt",
     };
 
     // destructuring
