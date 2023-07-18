@@ -40,7 +40,7 @@ impl Chromosome {
         }
     }
 
-    /// calculate fitness of path - fitness = sum of profits of all items - (sum of distances between nodes / (v_max - (nu * current_weight)))
+    /// calculate fitness of path: fitness = sum of profits of all items - (sum of distances between nodes / (v_max - (nu * current_weight)))
     fn calculate_fitness(path: &mut Vec<Node>, settings: &Settings) -> f32 {
         let Settings { renting_rate, v_max, v_min, maximum_weight, .. } = settings;
         let nu = (v_max-v_min) / *maximum_weight as f32;
@@ -61,7 +61,7 @@ impl Chromosome {
         // thief travels distance, more distance = less fitness
         // thief carries more weight, more weight = less fitness
         let mut current_weight = 0;
-        let mut last_node = &path_for_stats[0];
+        let mut previous_node = &path_for_stats[0];
         let mut subtrahend = 0.0;
         for node in &path_for_stats {
             // add weight of items in current node to current weight
@@ -70,10 +70,12 @@ impl Chromosome {
             }
 
             // calculate subtrahend
-            subtrahend += node.distance_to(&last_node) as f32 / (v_max - (nu * current_weight as f32));
-            last_node = node;
+            subtrahend += (previous_node.distance_to(&node) as f32) / (v_max - (nu * current_weight as f32));
+            previous_node = node;
         }
 
+        // if current weight is more than maximum weight, delete some of its items, and
+        // calculate fitness once more
         if current_weight > *maximum_weight {
             // if current weight is more than maximum weight, delete some of its items, and
             // calculate fitness once more
@@ -88,7 +90,7 @@ impl Chromosome {
                     current_weight -= item.weight;
                 }
             }
-
+            
             Self::calculate_fitness(path, settings);
         }
 
@@ -103,6 +105,55 @@ impl Chromosome {
 
     /// make child from 2 parents by combining parts of both parents
     pub fn crossover(self, other: &Chromosome, start: usize, end: usize, settings: &Settings) -> Chromosome {
+        // self.pmx_crossover(other, start, end, settings)
+        self.order_crossover(other, start, end, settings)
+    }
+
+    /// order crossover
+    fn order_crossover(self, other: &Chromosome, start: usize, end: usize, settings: &Settings) -> Chromosome {
+        let path_length = self.path.len();
+
+        // create child path
+        let mut child_path = vec![Node::default(); path_length];
+
+        // fill in nodes from parent1
+        child_path[start..=end].clone_from_slice(&self.path[start..=end]);
+
+        // order crossover
+        let other_ordered = &other.path[end+1..].iter().chain(&other.path[..end+1]).cloned().collect::<Vec<Node>>();
+
+        let mut index = (end+1) % path_length;
+        // println!("index: {}", index);
+        //
+        // println!("other ordered");
+        // other_ordered.iter().for_each(|n| print!("{}, ", n.id));
+        // println!();
+
+        for i in 0..path_length {
+            // println!("index: {}, node: {}", index, other_ordered[i].id);
+            if !child_path.contains(&other_ordered[i]) {
+                child_path[index] = other_ordered[i].clone();
+                index = (index + 1) % (path_length);
+            }
+        }
+
+        // println!("\nchild path");
+        // child_path.iter().for_each(|n| print!("{}, ", n.id));
+
+
+        // calculate fitness
+        let fitness = Chromosome::calculate_fitness(&mut child_path, settings);
+
+        Chromosome {
+            path: child_path,
+            fitness,
+        }
+    }
+
+
+
+    /// PMX crossover
+    fn pmx_crossover(self, other: &Chromosome, start: usize, end: usize, settings: &Settings) -> Chromosome {
         let path_length = self.path.len();
 
         // create child path
@@ -149,6 +200,7 @@ impl Chromosome {
         let Settings { mutation_rate, .. } = settings;
 
         for i in 0..self.path.len() {
+            // println!("self.path[i].id: {}", self.path[i].id);
             // find node with the same id as path[i]
             let node = nodes.iter().find(|n| n.id == self.path[i].id).unwrap();
 

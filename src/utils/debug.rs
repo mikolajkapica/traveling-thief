@@ -11,6 +11,7 @@ pub fn print_progress(generation: i32, population: &Vec<Chromosome>) {
 
     println!("Generation: {} | Best fitness: {} | Avg fitness: {}", generation, population[0].fitness, avg_fitness);
 
+
     // get average of all items profits
     // for chromosome in population {
     //     let mut items_count = 0;

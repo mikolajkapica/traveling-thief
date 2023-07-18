@@ -4,9 +4,12 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 
-# open file
-f = open("pmx-data.txt", "r")
+type = sys.argv[1].split('-')[0]
+
+# open file from argument
+f = open(sys.argv[1], "r")
 
 # read file
 lines = f.readlines()
@@ -40,13 +43,18 @@ plt.xlabel('generation')
 plt.ylabel('fitness')
 
 # set title
-plt.title('PMX, 1000pop, 0.1 item chance, 0.05 mutation chance, 10.0 v_max, 0.1 v_min, 280_000 max_weight') 
+plt.title(type.upper() + ', 1000pop, 0.1 item chance, 0.05 mutation chance, 10.0 v_max, 0.1 v_min, 280_000 max_weight') 
 
 # show plot
-plt.show()
+# plt.show()
 
 # save plot
-# plt.savefig('pmx-visualization.png')
+# image size to 1000x1000
+plt.gcf().set_size_inches(10, 8)
+
+# smaller text
+plt.rcParams.update({'font.size': 8})
+plt.savefig(type + '-visualization.png')
 
 
 
